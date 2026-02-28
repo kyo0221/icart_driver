@@ -11,8 +11,13 @@ ament_auto_find_build_dependencies()
 
 ament_auto_add_executable(icart_driver
         src/icart_drive_main.cpp
+        src/icart_drive.cpp
         )
 
+target_link_libraries(icart_driver ypspur)
+
+target_include_directories(icart_driver
+        PUBLIC ${ypspur_INCLUDE_DIRS})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
