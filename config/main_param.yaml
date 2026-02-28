@@ -1,0 +1,16 @@
+lauch:
+  ros__parameters:
+    joy: true
+
+/**:
+  ros__parameters:
+    linear_max:
+      vel: 1.0
+      acc: 1.0
+    angular_max:
+      vel: 1.0
+      acc: 1.0
+
+icart_driver:
+  ros__parameters:
+    interval_ms: 100
