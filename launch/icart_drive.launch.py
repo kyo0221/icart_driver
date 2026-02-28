@@ -1,29 +1,34 @@
 import os
 import yaml
 from launch import LaunchDescription
+from launch.actions import ExecuteProcess
 from ament_index_python.packages import get_package_share_directory
 from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    config_file_path = os.path.join(
-        get_package_share_directory('icart_driver'),
-        'config',
-        'main_params.yaml'
-    )
+    package_share_dir = get_package_share_directory('icart_driver')
 
-    with open(config_file_path, 'r') as file:
-        launch_params = yaml.safe_load(file)['launch']['ros__parameters']
+    main_param_path = os.path.join(package_share_dir, 'config', 'main_params.yaml')
+    ypspur_param_path = os.path.join(package_share_dir, 'config', 'ypspur.param')
 
-    # メイン実行機ノードの作成
-    main_exec_node = Node(
-        package = 'icart_driver',
-        executable = 'icart_drive_main',
-        parameters = [config_file_path],
+    # ypspurコーディネータの起動コマンドの作成
+    script_path = os.path.join(package_share_dir, 'scripts', 'ypspur_coordinator.sh')
+    ypspur_coordinator = ExecuteProcess(
+        cmd=['sh', script_path, ypspur_param_path],
         output='screen'
     )
 
-    # 操縦機ノードの作成
+    with open(main_param_path, 'r') as file:
+        launch_params = yaml.safe_load(file)['launch']['ros__parameters']
+
+    main_exec_node = Node(
+        package = 'icart_driver',
+        executable = 'icart_drive_main',
+        parameters = [main_param_path],
+        output='screen'
+    )
+
     joy_node = Node(
         package = 'joy',
         executable = 'joy_node',
@@ -31,12 +36,13 @@ def generate_launch_description():
     )
 
     # 起動エンティティクラスの作成
-    launch_discription = LaunchDescription()
+    launch_description = LaunchDescription()
 
     # 起動の追加
     if(launch_params['joy'] is True):
-        launch_discription.add_entity(joy_node)
+        launch_description.add_entity(joy_node)
 
-    launch_discription.add_entity(main_exec_node)
+    launch_description.add_entity(ypspur_coordinator)
+    launch_description.add_entity(main_exec_node)
 
-    return launch_discription
+    return launch_description
