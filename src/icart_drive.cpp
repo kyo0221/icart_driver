@@ -12,16 +12,16 @@ angular_max_acc(get_parameter("angular_max.acc").as_double())
         "cmd_vel", 10, std::bind(&IcartDriver::cmd_vel_callback, this, std::placeholders::_1));
 
     restart_sub_ = this->create_subscription<std_msgs::msg::Empty>(
-        "restart", 10, std::bind(&IcartDriver::restart_callback, this));
+        "restart", 10, std::bind(&IcartDriver::restart_callback, this, std::placeholders::_1));
 
     emergency_sub_ = this->create_subscription<std_msgs::msg::Empty>(
-        "emergency", 10, std::bind(&IcartDriver::emergency_callback, this));
+        "emergency", 10, std::bind(&IcartDriver::emergency_callback, this, std::placeholders::_1));
     
     bringup_ypspur();
 
-    timer_ = this->create_wall_timer(
-        std::chrono::milliseconds(interval_ms),
-        std::bind(&IcartDriver::loop, this));
+    // timer_ = this->create_wall_timer(
+    //     std::chrono::milliseconds(interval_ms),
+    //     std::bind(&IcartDriver::loop, this));
 }
 
 IcartDriver::~IcartDriver()
