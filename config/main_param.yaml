@@ -1,4 +1,4 @@
-lauch:
+launch:
   ros__parameters:
     joy: true
 

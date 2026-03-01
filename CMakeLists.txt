@@ -9,14 +9,14 @@ endif()
 find_package(ament_cmake_auto REQUIRED)
 ament_auto_find_build_dependencies()
 
-ament_auto_add_executable(icart_driver
+ament_auto_add_executable(icart_driver_main
         src/icart_drive_main.cpp
         src/icart_drive.cpp
         )
 
-target_link_libraries(icart_driver ypspur)
+target_link_libraries(icart_driver_main ypspur)
 
-target_include_directories(icart_driver
+target_include_directories(icart_driver_main
         PUBLIC ${ypspur_INCLUDE_DIRS})
 
 if(BUILD_TESTING)
@@ -30,4 +30,4 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-ament_auto_package(INSTALL_TO_SHARE launch config)
+ament_auto_package(INSTALL_TO_SHARE launch config scripts)

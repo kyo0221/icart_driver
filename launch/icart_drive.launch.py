@@ -9,7 +9,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     package_share_dir = get_package_share_directory('icart_driver')
 
-    main_param_path = os.path.join(package_share_dir, 'config', 'main_params.yaml')
+    main_param_path = os.path.join(package_share_dir, 'config', 'main_param.yaml')
     ypspur_param_path = os.path.join(package_share_dir, 'config', 'ypspur.param')
 
     # ypspurコーディネータの起動コマンドの作成
@@ -24,7 +24,7 @@ def generate_launch_description():
 
     main_exec_node = Node(
         package = 'icart_driver',
-        executable = 'icart_drive_main',
+        executable = 'icart_driver_main',
         parameters = [main_param_path],
         output='screen'
     )

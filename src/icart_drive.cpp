@@ -1,7 +1,7 @@
 #include "icart_driver/icart_drive.hpp"
 
 IcartDriver::IcartDriver(const rclcpp::NodeOptions & options)
-: Node("icart_drive", options),
+: Node("icart_driver", options),
 interval_ms(get_parameter("interval_ms").as_int()),
 linear_max_vel(get_parameter("linear_max.vel").as_double()),
 linear_max_acc(get_parameter("linear_max.acc").as_double()),
