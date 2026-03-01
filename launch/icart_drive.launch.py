@@ -1,7 +1,8 @@
 import os
 import yaml
 from launch import LaunchDescription
-from launch.actions import ExecuteProcess
+from launch.actions import ExecuteProcess, IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from ament_index_python.packages import get_package_share_directory
 from launch_ros.actions import Node
 
@@ -23,25 +24,39 @@ def generate_launch_description():
         launch_params = yaml.safe_load(file)['launch']['ros__parameters']
 
     main_exec_node = Node(
-        package = 'icart_driver',
-        executable = 'icart_driver_main',
-        parameters = [main_param_path],
+        package='icart_driver',
+        executable='icart_driver_main',
+        parameters=[main_param_path],
         output='screen'
     )
 
     joy_node = Node(
-        package = 'joy',
-        executable = 'joy_node',
-        output='screen'
+        package='joy',
+        executable='joy_node',
+        name='joy_node',
+        output='screen',
+    )
+
+    # コントローラーの起動コマンドの作成
+    controller_launch_path = os.path.join(
+        get_package_share_directory('controller'),
+        'launch',
+        'controller.launch.py'
+    )
+    controller_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(controller_launch_path),
+        launch_arguments={
+            'param_file': main_param_path,
+        }.items(),
     )
 
     # 起動エンティティクラスの作成
     launch_description = LaunchDescription()
 
     # 起動の追加
-    if(launch_params['joy'] is True):
+    if launch_params.get('joy', True):
         launch_description.add_entity(joy_node)
-
+    launch_description.add_entity(controller_launch)
     launch_description.add_entity(ypspur_coordinator)
     launch_description.add_entity(main_exec_node)
 
