@@ -28,6 +28,7 @@ private:
   double linear_max_acc;
   double angular_max_vel;
   double angular_max_acc;
+  bool ypspur_flag_ = false;
 
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
   rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr restart_sub_;

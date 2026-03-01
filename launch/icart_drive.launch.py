@@ -13,10 +13,10 @@ def generate_launch_description():
     ypspur_param_path = os.path.join(package_share_dir, 'config', 'ypspur.param')
 
     # ypspurコーディネータの起動コマンドの作成
-    script_path = os.path.join(package_share_dir, 'scripts', 'ypspur_coordinator.sh')
+    script_path = os.path.join(package_share_dir, 'scripts', 'ypspur_coordinator')
     ypspur_coordinator = ExecuteProcess(
-        cmd=['sh', script_path, ypspur_param_path],
-        output='screen'
+        cmd=[script_path, ypspur_param_path],
+        shell=True
     )
 
     with open(main_param_path, 'r') as file:

@@ -19,9 +19,9 @@ angular_max_acc(get_parameter("angular_max.acc").as_double())
     
     bringup_ypspur();
 
-    // timer_ = this->create_wall_timer(
-    //     std::chrono::milliseconds(interval_ms),
-    //     std::bind(&IcartDriver::loop, this));
+    timer_ = this->create_wall_timer(
+        std::chrono::milliseconds(interval_ms),
+        std::bind(&IcartDriver::loop, this));
 }
 
 IcartDriver::~IcartDriver()
@@ -42,8 +42,9 @@ void IcartDriver::init_params()
 
 void IcartDriver::bringup_ypspur()
 {
-    if(Spur_init()){
+    if(Spur_init() == 1){
         RCLCPP_INFO(this->get_logger(), "Bring up ypspur");
+        ypspur_flag_ = true;
         init_params();
     }else{
         RCLCPP_ERROR(this->get_logger(), "Disconnected ypspur");
@@ -66,4 +67,9 @@ void IcartDriver::emergency_callback(const std_msgs::msg::Empty::SharedPtr msg)
 {
     Spur_freeze();
     RCLCPP_INFO(this->get_logger(), "Emergency stop ypspur");
+}
+
+void IcartDriver::loop()
+{
+    if(!ypspur_flag_)    bringup_ypspur();
 }
