@@ -6,10 +6,10 @@ launch:
   ros__parameters:
     linear_max:
       vel: 1.0
-      acc: 1.0
+      acc: 5.0
     angular_max:
       vel: 1.0
-      acc: 1.0
+      acc: 5.0
 
 icart_driver:
   ros__parameters:
