@@ -58,6 +58,7 @@ void IcartDriver::cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr ms
 
 void IcartDriver::restart_callback(const std_msgs::msg::Empty::SharedPtr msg)
 {
+    (void)msg;
     bringup_ypspur();
     Spur_unfreeze();
     RCLCPP_INFO(this->get_logger(), "Restart ypspur");
@@ -65,6 +66,7 @@ void IcartDriver::restart_callback(const std_msgs::msg::Empty::SharedPtr msg)
 
 void IcartDriver::emergency_callback(const std_msgs::msg::Empty::SharedPtr msg)
 {
+    (void)msg;
     Spur_freeze();
     RCLCPP_INFO(this->get_logger(), "Emergency stop ypspur");
 }
