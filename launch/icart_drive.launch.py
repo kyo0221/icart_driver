@@ -30,13 +30,6 @@ def generate_launch_description():
         output='screen'
     )
 
-    joy_node = Node(
-        package='joy',
-        executable='joy_node',
-        name='joy_node',
-        output='screen',
-    )
-
     # コントローラーの起動コマンドの作成
     controller_launch_path = os.path.join(
         get_package_share_directory('controller'),
@@ -49,14 +42,28 @@ def generate_launch_description():
             'param_file': main_param_path,
         }.items(),
     )
+    # ml_plannerの起動コマンドの作成
+    planner_launch_path = os.path.join(
+        get_package_share_directory('ml_planner'),
+        'launch',
+        'planner.launch.py'
+    )
+    planner_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(planner_launch_path),
+        launch_arguments={
+            'param_file': main_param_path,
+        }.items(),
+    )
 
     # 起動エンティティクラスの作成
     launch_description = LaunchDescription()
 
     # 起動の追加
     if launch_params.get('joy', True):
-        launch_description.add_entity(joy_node)
-    launch_description.add_entity(controller_launch)
+        launch_description.add_entity(controller_launch)
+    if launch_params.get('planner', True):
+        launch_description.add_entity(planner_launch)
+    
     launch_description.add_entity(ypspur_coordinator)
     launch_description.add_entity(main_exec_node)
 

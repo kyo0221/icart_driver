@@ -1,6 +1,7 @@
 launch:
   ros__parameters:
-    joy: true
+    joy: false
+    planner: false
 
 /**:
   ros__parameters:
