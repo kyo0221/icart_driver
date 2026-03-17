@@ -2,6 +2,7 @@ launch:
   ros__parameters:
     joy: false
     planner: false
+    ekf: true
 
 /**:
   ros__parameters:
@@ -15,3 +16,7 @@ launch:
 icart_driver:
   ros__parameters:
     interval_ms: 100
+    publish_tf: false
+    odom_topic: /odom
+    odom_frame_id: odom
+    base_frame_id: base_link
