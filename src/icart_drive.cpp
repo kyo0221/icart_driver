@@ -1,5 +1,7 @@
 #include "icart_driver/icart_drive.hpp"
 
+#include <tf2/LinearMath/Quaternion.h>
+
 IcartDriver::IcartDriver(const rclcpp::NodeOptions & options)
 : Node("icart_driver", options),
 interval_ms(get_parameter("interval_ms").as_int()),
@@ -16,6 +18,9 @@ angular_max_acc(get_parameter("angular_max.acc").as_double())
 
     emergency_sub_ = this->create_subscription<std_msgs::msg::Empty>(
         "emergency", 10, std::bind(&IcartDriver::emergency_callback, this, std::placeholders::_1));
+
+    odom_pub_ = this->create_publisher<nav_msgs::msg::Odometry>("/odom", 10);
+    tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
     
     bringup_ypspur();
 
@@ -71,7 +76,53 @@ void IcartDriver::emergency_callback(const std_msgs::msg::Empty::SharedPtr msg)
     RCLCPP_INFO(this->get_logger(), "Emergency stop ypspur");
 }
 
+void IcartDriver::publish_odom()
+{
+    double x = 0.0;
+    double y = 0.0;
+    double yaw = 0.0;
+    double linear_vel = 0.0;
+    double angular_vel = 0.0;
+
+    Spur_get_pos_GL(&x, &y, &yaw);
+    Spur_get_vel(&linear_vel, &angular_vel);
+
+    tf2::Quaternion quaternion;
+    quaternion.setRPY(0.0, 0.0, yaw);
+
+    const auto stamp = this->now();
+
+    geometry_msgs::msg::TransformStamped odom_tf;
+    odom_tf.header.stamp = stamp;
+    odom_tf.header.frame_id = "odom";
+    odom_tf.child_frame_id = "base_link";
+    odom_tf.transform.translation.x = x;
+    odom_tf.transform.translation.y = y;
+    odom_tf.transform.translation.z = 0.0;
+    odom_tf.transform.rotation.x = quaternion.x();
+    odom_tf.transform.rotation.y = quaternion.y();
+    odom_tf.transform.rotation.z = quaternion.z();
+    odom_tf.transform.rotation.w = quaternion.w();
+    tf_broadcaster_->sendTransform(odom_tf);
+
+    nav_msgs::msg::Odometry odom_msg;
+    odom_msg.header.stamp = stamp;
+    odom_msg.header.frame_id = "odom";
+    odom_msg.child_frame_id = "base_link";
+    odom_msg.pose.pose.position.x = x;
+    odom_msg.pose.pose.position.y = y;
+    odom_msg.pose.pose.position.z = 0.0;
+    odom_msg.pose.pose.orientation = odom_tf.transform.rotation;
+    odom_msg.twist.twist.linear.x = linear_vel;
+    odom_msg.twist.twist.angular.z = angular_vel;
+    odom_pub_->publish(odom_msg);
+}
+
 void IcartDriver::loop()
 {
-    if(!ypspur_flag_)    bringup_ypspur();
+    if(!ypspur_flag_) {
+        bringup_ypspur();
+    }else{
+        publish_odom();
+    }
 }
