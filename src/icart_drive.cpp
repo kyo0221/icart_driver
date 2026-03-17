@@ -8,7 +8,11 @@ interval_ms(get_parameter("interval_ms").as_int()),
 linear_max_vel(get_parameter("linear_max.vel").as_double()),
 linear_max_acc(get_parameter("linear_max.acc").as_double()),
 angular_max_vel(get_parameter("angular_max.vel").as_double()),
-angular_max_acc(get_parameter("angular_max.acc").as_double())
+angular_max_acc(get_parameter("angular_max.acc").as_double()),
+publish_tf_(get_parameter("publish_tf").as_bool()),
+odom_topic_(get_parameter("odom_topic").as_string()),
+odom_frame_id_(get_parameter("odom_frame_id").as_string()),
+base_frame_id_(get_parameter("base_frame_id").as_string())
 {
     cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
         "cmd_vel", 10, std::bind(&IcartDriver::cmd_vel_callback, this, std::placeholders::_1));
@@ -19,7 +23,7 @@ angular_max_acc(get_parameter("angular_max.acc").as_double())
     emergency_sub_ = this->create_subscription<std_msgs::msg::Empty>(
         "emergency", 10, std::bind(&IcartDriver::emergency_callback, this, std::placeholders::_1));
 
-    odom_pub_ = this->create_publisher<nav_msgs::msg::Odometry>("/odom", 10);
+    odom_pub_ = this->create_publisher<nav_msgs::msg::Odometry>(odom_topic_, 10);
     tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
     
     bringup_ypspur();
@@ -94,8 +98,8 @@ void IcartDriver::publish_odom()
 
     geometry_msgs::msg::TransformStamped odom_tf;
     odom_tf.header.stamp = stamp;
-    odom_tf.header.frame_id = "odom";
-    odom_tf.child_frame_id = "base_link";
+    odom_tf.header.frame_id = odom_frame_id_;
+    odom_tf.child_frame_id = base_frame_id_;
     odom_tf.transform.translation.x = x;
     odom_tf.transform.translation.y = y;
     odom_tf.transform.translation.z = 0.0;
@@ -103,18 +107,34 @@ void IcartDriver::publish_odom()
     odom_tf.transform.rotation.y = quaternion.y();
     odom_tf.transform.rotation.z = quaternion.z();
     odom_tf.transform.rotation.w = quaternion.w();
-    tf_broadcaster_->sendTransform(odom_tf);
+    if (publish_tf_) {
+        tf_broadcaster_->sendTransform(odom_tf);
+    }
 
     nav_msgs::msg::Odometry odom_msg;
     odom_msg.header.stamp = stamp;
-    odom_msg.header.frame_id = "odom";
-    odom_msg.child_frame_id = "base_link";
+    odom_msg.header.frame_id = odom_frame_id_;
+    odom_msg.child_frame_id = base_frame_id_;
     odom_msg.pose.pose.position.x = x;
     odom_msg.pose.pose.position.y = y;
     odom_msg.pose.pose.position.z = 0.0;
     odom_msg.pose.pose.orientation = odom_tf.transform.rotation;
     odom_msg.twist.twist.linear.x = linear_vel;
     odom_msg.twist.twist.angular.z = angular_vel;
+    odom_msg.pose.covariance = {
+        0.05, 0.0, 0.0, 0.0, 0.0, 0.0,
+        0.0, 0.05, 0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 1e6, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 1e6, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0, 1e6, 0.0,
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.1};
+    odom_msg.twist.covariance = {
+        0.1, 0.0, 0.0, 0.0, 0.0, 0.0,
+        0.0, 0.2, 0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 1e6, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 1e6, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0, 1e6, 0.0,
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.1};
     odom_pub_->publish(odom_msg);
 }
 

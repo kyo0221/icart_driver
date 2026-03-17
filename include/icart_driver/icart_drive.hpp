@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <string>
 
 #include <geometry_msgs/msg/transform_stamped.hpp>
 #include <geometry_msgs/msg/twist.hpp>
@@ -32,6 +33,10 @@ private:
   double linear_max_acc;
   double angular_max_vel;
   double angular_max_acc;
+  bool publish_tf_;
+  std::string odom_topic_;
+  std::string odom_frame_id_;
+  std::string base_frame_id_;
   bool ypspur_flag_ = false;
 
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
