@@ -11,6 +11,7 @@ def generate_launch_description():
     package_share_dir = get_package_share_directory('icart_driver')
 
     main_param_path = os.path.join(package_share_dir, 'config', 'main_param.yaml')
+    ekf_param_path = os.path.join(package_share_dir, 'config', 'ekf.yaml')
     ypspur_param_path = os.path.join(package_share_dir, 'config', 'ypspur.param')
 
     # ypspurコーディネータの起動コマンドの作成
@@ -28,6 +29,16 @@ def generate_launch_description():
         executable='icart_driver_main',
         parameters=[main_param_path],
         output='screen'
+    )
+    ekf_node = Node(
+        package='robot_localization',
+        executable='ekf_node',
+        name='ekf_filter_node',
+        output='screen',
+        parameters=[ekf_param_path],
+        remappings=[
+            ('odometry/filtered', '/odom_filtered'),
+        ],
     )
 
     # コントローラーの起動コマンドの作成
@@ -66,5 +77,7 @@ def generate_launch_description():
     
     launch_description.add_entity(ypspur_coordinator)
     launch_description.add_entity(main_exec_node)
+    if launch_params.get('ekf', True):
+        launch_description.add_entity(ekf_node)
 
     return launch_description
