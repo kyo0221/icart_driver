@@ -1,0 +1,52 @@
+launch:
+  ros__parameters:
+    joy: false
+    planner: false
+    ekf: true
+    livox: true
+
+    livox_launch:
+      enable_rviz: false
+      xfer_format: 0
+      multi_topic: 0
+      data_src: 0
+      publish_freq: 10.0
+      output_data_type: 0
+      frame_id: livox_frame
+      lvx_file_path: /home/livox/livox_test.lvx
+      cmdline_input_bd_code: livox0000000001
+    pointcloud_to_laserscan_topics:
+      cloud_in: /livox/lidar
+      scan: /scan
+
+/**:
+  ros__parameters:
+    linear_max:
+      vel: 1.0
+      acc: 5.0
+    angular_max:
+      vel: 1.0
+      acc: 5.0
+
+icart_driver:
+  ros__parameters:
+    interval_ms: 100
+    publish_tf: false
+    odom_topic: /odom
+    odom_frame_id: odom
+    base_frame_id: base_link
+
+pointcloud_to_laserscan:
+  ros__parameters:
+    target_frame: base_link
+    transform_tolerance: 0.01
+    min_height: -0.5
+    max_height: 5.0
+    angle_min: -3.141592653589793
+    angle_max: 3.141592653589793
+    angle_increment: 0.008726646259971648
+    scan_time: 0.1
+    range_min: 0.2
+    range_max: 50.0
+    use_inf: true
+    inf_epsilon: 1.0
