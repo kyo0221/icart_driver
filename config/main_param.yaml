@@ -18,5 +18,4 @@ icart_driver:
 
 usb_cam_node:
   ros__parameters:
-    video_device: /dev/video0
-    framerate: 30
+    video_device: /dev/video4
