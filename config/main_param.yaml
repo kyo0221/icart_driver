@@ -1,7 +1,7 @@
 launch:
   ros__parameters:
     joy: false
-    planner: false
+    usb_cam: false
 
 /**:
   ros__parameters:
@@ -15,3 +15,7 @@ launch:
 icart_driver:
   ros__parameters:
     interval_ms: 100
+
+usb_cam_node:
+  ros__parameters:
+    video_device: /dev/video4
