@@ -1,0 +1,1 @@
+SUBSYSTEM=="tty", ATTRS{idVendor}=="03eb", ATTRS{idProduct}=="6119", SYMLINK+="sensors/icart-mini", ENV{ID_MM_DEVICE_IGNORE}="1"

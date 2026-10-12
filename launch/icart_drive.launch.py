@@ -1,9 +1,7 @@
 import os
-import yaml
-from launch import LaunchDescription
-from launch.actions import ExecuteProcess, IncludeLaunchDescription
-from launch.launch_description_sources import PythonLaunchDescriptionSource
 from ament_index_python.packages import get_package_share_directory
+from launch import LaunchDescription
+from launch.actions import ExecuteProcess
 from launch_ros.actions import Node
 
 
@@ -17,7 +15,7 @@ def generate_launch_description():
     script_path = os.path.join(package_share_dir, 'scripts', 'ypspur_coordinator')
     ypspur_coordinator = ExecuteProcess(
         cmd=[script_path, ypspur_param_path],
-        shell=True
+        output='screen',
     )
 
     main_exec_node = Node(
@@ -26,7 +24,6 @@ def generate_launch_description():
         parameters=[main_param_path],
         output='screen'
     )
-
 
     # 起動エンティティクラスの作成
     launch_description = LaunchDescription()

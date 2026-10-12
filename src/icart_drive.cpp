@@ -29,12 +29,17 @@ IcartDriver::~IcartDriver()
     Spur_free();
 }
 
-void IcartDriver::init_params()
+void IcartDriver::apply_limits()
 {
     Spur_set_vel(linear_max_vel);
     Spur_set_angvel(angular_max_vel);
     Spur_set_accel(linear_max_acc);
     Spur_set_angaccel(angular_max_acc);
+}
+
+void IcartDriver::init_params()
+{
+    apply_limits();
 
     Spur_set_pos_GL(0, 0, 0);
     Spur_free();
@@ -47,7 +52,8 @@ void IcartDriver::bringup_ypspur()
         ypspur_flag_ = true;
         init_params();
     }else{
-        RCLCPP_ERROR(this->get_logger(), "Disconnected ypspur");
+        RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 1000,
+            "Waiting for ypspur-coordinator...");
     }
 }
 
@@ -73,5 +79,18 @@ void IcartDriver::emergency_callback(const std_msgs::msg::Empty::SharedPtr msg)
 
 void IcartDriver::loop()
 {
-    if(!ypspur_flag_)    bringup_ypspur();
+    if(!ypspur_flag_){
+        bringup_ypspur();
+        return;
+    }
+
+    loop_count_++;
+    if(loop_count_ * interval_ms >= 1000){
+        loop_count_ = 0;
+        apply_limits();
+        if(YP_get_error_state()){
+            RCLCPP_WARN(this->get_logger(), "Lost connection to ypspur-coordinator. Reconnecting...");
+            ypspur_flag_ = false;
+        }
+    }
 }

@@ -16,6 +16,7 @@ public:
 
 private:
   void init_params();
+  void apply_limits();
   void bringup_ypspur();
   void loop();
 
@@ -29,6 +30,7 @@ private:
   double angular_max_vel;
   double angular_max_acc;
   bool ypspur_flag_ = false;
+  int loop_count_ = 0;
 
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
   rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr restart_sub_;
