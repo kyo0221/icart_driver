@@ -10,3 +10,4 @@
 icart_driver:
   ros__parameters:
     interval_ms: 100
+    cmd_vel_timeout_ms: 500

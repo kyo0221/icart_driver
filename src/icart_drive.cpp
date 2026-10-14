@@ -3,6 +3,7 @@
 IcartDriver::IcartDriver(const rclcpp::NodeOptions & options)
 : Node("icart_driver", options),
 interval_ms(get_parameter("interval_ms").as_int()),
+cmd_vel_timeout_ms(get_parameter("cmd_vel_timeout_ms").as_int()),
 linear_max_vel(get_parameter("linear_max.vel").as_double()),
 linear_max_acc(get_parameter("linear_max.acc").as_double()),
 angular_max_vel(get_parameter("angular_max.vel").as_double()),
@@ -60,6 +61,8 @@ void IcartDriver::bringup_ypspur()
 void IcartDriver::cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
 {
     Spur_vel(msg->linear.x, msg->angular.z);
+    last_cmd_vel_ = std::chrono::steady_clock::now();
+    cmd_vel_active_ = true;
 }
 
 void IcartDriver::restart_callback(const std_msgs::msg::Empty::SharedPtr msg)
@@ -82,6 +85,12 @@ void IcartDriver::loop()
     if(!ypspur_flag_){
         bringup_ypspur();
         return;
+    }
+
+    if(cmd_vel_active_ && std::chrono::steady_clock::now() - last_cmd_vel_ > std::chrono::milliseconds(cmd_vel_timeout_ms)){
+        Spur_vel(0.0, 0.0);
+        cmd_vel_active_ = false;
+        RCLCPP_WARN(this->get_logger(), "cmd_vel timed out, stopping");
     }
 
     loop_count_++;

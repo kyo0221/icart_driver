@@ -25,12 +25,15 @@ private:
   void emergency_callback(const std_msgs::msg::Empty::SharedPtr msg);
 
   int interval_ms;
+  int cmd_vel_timeout_ms;
   double linear_max_vel;
   double linear_max_acc;
   double angular_max_vel;
   double angular_max_acc;
   bool ypspur_flag_ = false;
   int loop_count_ = 0;
+  bool cmd_vel_active_ = false;
+  std::chrono::steady_clock::time_point last_cmd_vel_;
 
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
   rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr restart_sub_;
