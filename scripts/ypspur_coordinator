@@ -27,7 +27,7 @@ do
   done
 
   ipcrm -Q 0x00007045 2>/dev/null && echo "removed stale ypspur message queue"
-  ypspur-coordinator -p "$PARAM" -d "$DEVICE" &
+  ypspur-coordinator --reconnect -p "$PARAM" -d "$DEVICE" &
   CPID=$!
   wait "$CPID"
   echo "ypspur-coordinator exited. restarting..."
