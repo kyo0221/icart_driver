@@ -1,5 +1,7 @@
 #include "icart_driver/icart_drive.hpp"
 
+#include <cmath>
+
 IcartDriver::IcartDriver(const rclcpp::NodeOptions & options)
 : Node("icart_driver", options),
 interval_ms(get_parameter("interval_ms").as_int()),
@@ -7,8 +9,12 @@ cmd_vel_timeout_ms(get_parameter("cmd_vel_timeout_ms").as_int()),
 linear_max_vel(get_parameter("linear_max.vel").as_double()),
 linear_max_acc(get_parameter("linear_max.acc").as_double()),
 angular_max_vel(get_parameter("angular_max.vel").as_double()),
-angular_max_acc(get_parameter("angular_max.acc").as_double())
+angular_max_acc(get_parameter("angular_max.acc").as_double()),
+odom_frame_id_(get_parameter("odom_frame_id").as_string()),
+base_frame_id_(get_parameter("base_frame_id").as_string())
 {
+    odom_pub_ = this->create_publisher<nav_msgs::msg::Odometry>("/icart/odom", 10);
+
     cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
         "cmd_vel", 10, std::bind(&IcartDriver::cmd_vel_callback, this, std::placeholders::_1));
 
@@ -93,6 +99,8 @@ void IcartDriver::loop()
         RCLCPP_WARN(this->get_logger(), "cmd_vel timed out, stopping");
     }
 
+    publish_odom();
+
     loop_count_++;
     if(loop_count_ * interval_ms >= 1000){
         loop_count_ = 0;
@@ -102,4 +110,25 @@ void IcartDriver::loop()
             ypspur_flag_ = false;
         }
     }
+}
+
+void IcartDriver::publish_odom()
+{
+    double x, y, yaw, v, w;
+    Spur_get_pos_GL(&x, &y, &yaw);
+    double stamp = Spur_get_vel(&v, &w);
+    if(stamp <= last_odom_stamp_) return;
+    last_odom_stamp_ = stamp;
+
+    nav_msgs::msg::Odometry odom;
+    odom.header.stamp = this->now();
+    odom.header.frame_id = odom_frame_id_;
+    odom.child_frame_id = base_frame_id_;
+    odom.pose.pose.position.x = x;
+    odom.pose.pose.position.y = y;
+    odom.pose.pose.orientation.z = std::sin(yaw / 2.0);
+    odom.pose.pose.orientation.w = std::cos(yaw / 2.0);
+    odom.twist.twist.linear.x = v;
+    odom.twist.twist.angular.z = w;
+    odom_pub_->publish(odom);
 }
