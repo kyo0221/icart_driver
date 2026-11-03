@@ -3,7 +3,7 @@
 # Author : Daiki Maekawa
 
 PARAM=$1
-DEVICE=/dev/sensors/icart-mini
+DEVICE=/dev/sensors/icart
 
 if [ -z "$PARAM" ]; then
   echo "usage: $0 <ypspur.param>" >&2
