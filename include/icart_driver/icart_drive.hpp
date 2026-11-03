@@ -1,8 +1,10 @@
 #pragma once
 
 #include <chrono>
+#include <string>
 
 #include <geometry_msgs/msg/twist.hpp>
+#include <nav_msgs/msg/odometry.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <std_msgs/msg/empty.hpp>
 
@@ -19,6 +21,7 @@ private:
   void apply_limits();
   void bringup_ypspur();
   void loop();
+  void publish_odom();
 
   void cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg);
   void restart_callback(const std_msgs::msg::Empty::SharedPtr msg);
@@ -30,6 +33,8 @@ private:
   double linear_max_acc;
   double angular_max_vel;
   double angular_max_acc;
+  std::string odom_frame_id_;
+  std::string base_frame_id_;
   bool ypspur_flag_ = false;
   int loop_count_ = 0;
   bool cmd_vel_active_ = false;
@@ -38,5 +43,6 @@ private:
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
   rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr restart_sub_;
   rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr emergency_sub_;
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
   rclcpp::TimerBase::SharedPtr timer_;
 };
