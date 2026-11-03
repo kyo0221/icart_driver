@@ -116,7 +116,9 @@ void IcartDriver::publish_odom()
 {
     double x, y, yaw, v, w;
     Spur_get_pos_GL(&x, &y, &yaw);
-    Spur_get_vel(&v, &w);
+    double stamp = Spur_get_vel(&v, &w);
+    if(stamp <= last_odom_stamp_) return;
+    last_odom_stamp_ = stamp;
 
     nav_msgs::msg::Odometry odom;
     odom.header.stamp = this->now();

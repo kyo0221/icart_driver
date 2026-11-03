@@ -37,6 +37,7 @@ private:
   std::string base_frame_id_;
   bool ypspur_flag_ = false;
   int loop_count_ = 0;
+  double last_odom_stamp_ = 0.0;
   bool cmd_vel_active_ = false;
   std::chrono::steady_clock::time_point last_cmd_vel_;
 
