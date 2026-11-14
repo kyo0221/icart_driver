@@ -1,9 +1,11 @@
 #pragma once
 
 #include <chrono>
+#include <string>
 
 #include <geometry_msgs/msg/twist.hpp>
 #include <geometry_msgs/msg/twist_stamped.hpp>
+#include <nav_msgs/msg/odometry.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <std_msgs/msg/empty.hpp>
@@ -22,6 +24,7 @@ private:
   void bringup_ypspur();
   void loop();
   void publish_status();
+  void publish_odom();
 
   void cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg);
   void restart_callback(const std_msgs::msg::Empty::SharedPtr msg);
@@ -33,8 +36,11 @@ private:
   double linear_max_acc;
   double angular_max_vel;
   double angular_max_acc;
+  std::string odom_frame_id_;
+  std::string base_frame_id_;
   bool ypspur_flag_ = false;
   int loop_count_ = 0;
+  double last_odom_stamp_ = 0.0;
   bool cmd_vel_active_ = false;
   std::chrono::steady_clock::time_point last_cmd_vel_;
 
@@ -44,5 +50,6 @@ private:
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr wheel_status_pub_;
   rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_pub_;
   rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_ref_pub_;
+  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
   rclcpp::TimerBase::SharedPtr timer_;
 };
