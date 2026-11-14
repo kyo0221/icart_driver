@@ -3,7 +3,9 @@
 #include <chrono>
 
 #include <geometry_msgs/msg/twist.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <sensor_msgs/msg/joint_state.hpp>
 #include <std_msgs/msg/empty.hpp>
 
 #include <ypspur.h>
@@ -19,6 +21,7 @@ private:
   void apply_limits();
   void bringup_ypspur();
   void loop();
+  void publish_status();
 
   void cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg);
   void restart_callback(const std_msgs::msg::Empty::SharedPtr msg);
@@ -38,5 +41,8 @@ private:
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
   rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr restart_sub_;
   rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr emergency_sub_;
+  rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr wheel_status_pub_;
+  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_pub_;
+  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr twist_ref_pub_;
   rclcpp::TimerBase::SharedPtr timer_;
 };

@@ -17,7 +17,11 @@ angular_max_acc(get_parameter("angular_max.acc").as_double())
 
     emergency_sub_ = this->create_subscription<std_msgs::msg::Empty>(
         "emergency", 10, std::bind(&IcartDriver::emergency_callback, this, std::placeholders::_1));
-    
+
+    wheel_status_pub_ = this->create_publisher<sensor_msgs::msg::JointState>("icart/wheel_status", 10);
+    twist_pub_ = this->create_publisher<geometry_msgs::msg::TwistStamped>("icart/wheel_twist", 10);
+    twist_ref_pub_ = this->create_publisher<geometry_msgs::msg::TwistStamped>("icart/wheel_twist_ref", 10);
+
     bringup_ypspur();
 
     timer_ = this->create_wall_timer(
@@ -80,12 +84,42 @@ void IcartDriver::emergency_callback(const std_msgs::msg::Empty::SharedPtr msg)
     RCLCPP_INFO(this->get_logger(), "Emergency stop ypspur");
 }
 
+void IcartDriver::publish_status()
+{
+    double ang_r, ang_l, vel_r, vel_l, torque_r, torque_l, v, w, v_ref, w_ref;
+    YP_get_wheel_ang(&ang_r, &ang_l);
+    YP_get_wheel_vel(&vel_r, &vel_l);
+    YP_get_wheel_torque(&torque_r, &torque_l);
+    Spur_get_vel(&v, &w);
+    YP_get_vref(&v_ref, &w_ref);
+
+    sensor_msgs::msg::JointState states;
+    states.header.stamp = this->now();
+    states.name = {"right_wheel", "left_wheel"};
+    states.position = {ang_r, ang_l};
+    states.velocity = {vel_r, vel_l};
+    states.effort = {torque_r, torque_l};
+    wheel_status_pub_->publish(states);
+
+    geometry_msgs::msg::TwistStamped twist;
+    twist.header = states.header;
+    twist.twist.linear.x = v;
+    twist.twist.angular.z = w;
+    twist_pub_->publish(twist);
+
+    twist.twist.linear.x = v_ref;
+    twist.twist.angular.z = w_ref;
+    twist_ref_pub_->publish(twist);
+}
+
 void IcartDriver::loop()
 {
     if(!ypspur_flag_){
         bringup_ypspur();
         return;
     }
+
+    publish_status();
 
     if(cmd_vel_active_ && std::chrono::steady_clock::now() - last_cmd_vel_ > std::chrono::milliseconds(cmd_vel_timeout_ms)){
         Spur_vel(0.0, 0.0);
