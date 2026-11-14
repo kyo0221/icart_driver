@@ -10,6 +10,9 @@ linear_max_vel(get_parameter("linear_max.vel").as_double()),
 linear_max_acc(get_parameter("linear_max.acc").as_double()),
 angular_max_vel(get_parameter("angular_max.vel").as_double()),
 angular_max_acc(get_parameter("angular_max.acc").as_double()),
+p_gain_(get_parameter_or("p_gain", 0.5)),
+i_gain_(get_parameter_or("i_gain", 0.0)),
+d_gain_(get_parameter_or("d_gain", 0.0)),
 odom_frame_id_(get_parameter("odom_frame_id").as_string()),
 base_frame_id_(get_parameter("base_frame_id").as_string())
 {
@@ -17,6 +20,9 @@ base_frame_id_(get_parameter("base_frame_id").as_string())
 
     cmd_vel_sub_ = this->create_subscription<geometry_msgs::msg::Twist>(
         "cmd_vel", 10, std::bind(&IcartDriver::cmd_vel_callback, this, std::placeholders::_1));
+
+    imu_sub_ = this->create_subscription<sensor_msgs::msg::Imu>(
+        "/rsf/imu", rclcpp::SensorDataQoS(), std::bind(&IcartDriver::imu_callback, this, std::placeholders::_1));
 
     restart_sub_ = this->create_subscription<std_msgs::msg::Empty>(
         "restart", 10, std::bind(&IcartDriver::restart_callback, this, std::placeholders::_1));
@@ -68,10 +74,30 @@ void IcartDriver::bringup_ypspur()
     }
 }
 
+void IcartDriver::imu_callback(const sensor_msgs::msg::Imu::SharedPtr msg)
+{
+    yaw_rate_ += 0.02 * (msg->angular_velocity.y - yaw_rate_);
+    last_imu_ = std::chrono::steady_clock::now();
+}
+
 void IcartDriver::cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg)
 {
-    Spur_vel(msg->linear.x, msg->angular.z);
-    last_cmd_vel_ = std::chrono::steady_clock::now();
+    const auto now = std::chrono::steady_clock::now();
+    const double dt = std::chrono::duration<double>(now - last_cmd_vel_).count();
+    const bool moving = msg->linear.x != 0.0 || msg->angular.z != 0.0;
+    const bool imu_alive = now - last_imu_ < std::chrono::milliseconds(cmd_vel_timeout_ms);
+    double angular = msg->angular.z;
+    if(moving && imu_alive && cmd_vel_active_ && dt > 0.0){
+        const double error = msg->angular.z - yaw_rate_;
+        yaw_error_integral_ += error * dt;
+        angular += p_gain_ * error + i_gain_ * yaw_error_integral_ + d_gain_ * (error - last_yaw_error_) / dt;
+        last_yaw_error_ = error;
+    }else{
+        yaw_error_integral_ = 0.0;
+        last_yaw_error_ = 0.0;
+    }
+    Spur_vel(msg->linear.x, angular);
+    last_cmd_vel_ = now;
     cmd_vel_active_ = true;
 }
 

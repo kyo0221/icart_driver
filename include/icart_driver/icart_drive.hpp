@@ -7,6 +7,7 @@
 #include <geometry_msgs/msg/twist_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <sensor_msgs/msg/imu.hpp>
 #include <sensor_msgs/msg/joint_state.hpp>
 #include <std_msgs/msg/empty.hpp>
 
@@ -26,6 +27,7 @@ private:
   void publish_status();
   void publish_odom();
 
+  void imu_callback(const sensor_msgs::msg::Imu::SharedPtr msg);
   void cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr msg);
   void restart_callback(const std_msgs::msg::Empty::SharedPtr msg);
   void emergency_callback(const std_msgs::msg::Empty::SharedPtr msg);
@@ -36,6 +38,13 @@ private:
   double linear_max_acc;
   double angular_max_vel;
   double angular_max_acc;
+  double p_gain_;
+  double i_gain_;
+  double d_gain_;
+  double yaw_rate_ = 0.0;
+  double yaw_error_integral_ = 0.0;
+  double last_yaw_error_ = 0.0;
+  std::chrono::steady_clock::time_point last_imu_;
   std::string odom_frame_id_;
   std::string base_frame_id_;
   bool ypspur_flag_ = false;
@@ -45,6 +54,7 @@ private:
   std::chrono::steady_clock::time_point last_cmd_vel_;
 
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr cmd_vel_sub_;
+  rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_sub_;
   rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr restart_sub_;
   rclcpp::Subscription<std_msgs::msg::Empty>::SharedPtr emergency_sub_;
   rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr wheel_status_pub_;

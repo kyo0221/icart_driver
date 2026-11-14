@@ -11,5 +11,8 @@ icart_driver:
   ros__parameters:
     interval_ms: 100
     cmd_vel_timeout_ms: 500
+    p_gain: 0.5
+    i_gain: 0.0
+    d_gain: 0.0
     odom_frame_id: icart_odom
     base_frame_id: base_footprint
