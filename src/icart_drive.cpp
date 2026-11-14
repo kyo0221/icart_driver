@@ -1,5 +1,6 @@
 #include "icart_driver/icart_drive.hpp"
 
+#include <algorithm>
 #include <cmath>
 
 IcartDriver::IcartDriver(const rclcpp::NodeOptions & options)
@@ -11,8 +12,9 @@ linear_max_acc(get_parameter("linear_max.acc").as_double()),
 angular_max_vel(get_parameter("angular_max.vel").as_double()),
 angular_max_acc(get_parameter("angular_max.acc").as_double()),
 p_gain_(get_parameter_or("p_gain", 0.5)),
-i_gain_(get_parameter_or("i_gain", 0.0)),
+i_gain_(get_parameter_or("i_gain", 1.0)),
 d_gain_(get_parameter_or("d_gain", 0.0)),
+drive_yaw_integral_limit_(get_parameter_or("drive_yaw_integral_limit", 0.3)),
 odom_frame_id_(get_parameter("odom_frame_id").as_string()),
 base_frame_id_(get_parameter("base_frame_id").as_string())
 {
@@ -89,8 +91,9 @@ void IcartDriver::cmd_vel_callback(const geometry_msgs::msg::Twist::SharedPtr ms
     double angular = msg->angular.z;
     if(moving && imu_alive && cmd_vel_active_ && dt > 0.0){
         const double error = msg->angular.z - yaw_rate_;
-        yaw_error_integral_ += error * dt;
-        angular += p_gain_ * error + i_gain_ * yaw_error_integral_ + d_gain_ * (error - last_yaw_error_) / dt;
+        yaw_error_integral_ = std::clamp(
+            yaw_error_integral_ + i_gain_ * error * dt, -drive_yaw_integral_limit_, drive_yaw_integral_limit_);
+        angular += p_gain_ * error + yaw_error_integral_ + d_gain_ * (error - last_yaw_error_) / dt;
         last_yaw_error_ = error;
     }else{
         yaw_error_integral_ = 0.0;

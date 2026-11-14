@@ -41,6 +41,7 @@ private:
   double p_gain_;
   double i_gain_;
   double d_gain_;
+  double drive_yaw_integral_limit_;
   double yaw_rate_ = 0.0;
   double yaw_error_integral_ = 0.0;
   double last_yaw_error_ = 0.0;
